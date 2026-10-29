@@ -27,7 +27,6 @@ struct StockDetailView: View {
                             Text("Today").font(.subheadline).foregroundStyle(.secondary)
                         }.foregroundStyle(chartColor)
                         Text("\(stock.exchange) · \(stock.currency)").font(.caption).foregroundStyle(.tertiary)
-                        quoteTimestamp(stock)
                     }
                     externalAppLinks(stock)
                     priceChart(stock).frame(height: 220)
@@ -50,10 +49,8 @@ struct StockDetailView: View {
                     }
                     InvestmentThesisView(
                         symbol: stock.symbol,
-                        companyName: stock.name,
                         currentPrice: stock.price,
-                        currency: stock.currency,
-                        quoteTimestamp: stock.marketTime
+                        currency: stock.currency
                     )
                     technicalsSection
                     DisclosureGroup("Key statistics") {
