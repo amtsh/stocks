@@ -202,7 +202,9 @@ enum MassiveClient {
             ?? 0
         guard price > 0 else { throw MarketDataError.noData }
         let previous = (previousDay["c"] as? NSNumber)?.doubleValue ?? price
-        let name = (ticker["name"] as? String) ?? symbol
+        let referenceURL = URL(string: "\(base)/v3/reference/tickers/\(encoded)")!
+        let reference = (try? await request(referenceURL))?["results"] as? [String: Any] ?? [:]
+        let name = (reference["name"] as? String) ?? (ticker["name"] as? String) ?? symbol
         let marketTime = (lastTrade["t"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue / 1_000_000_000) }
         let start = ISO8601DateFormatter().string(from: range.startDate).prefix(10)
         let end = ISO8601DateFormatter().string(from: .now).prefix(10)
@@ -219,7 +221,7 @@ enum MassiveClient {
         } catch {
             history = []
         }
-        let details = ticker["ticker"] as? [String: Any] ?? [:]
+        let details = reference
         let volume = (day["v"] as? NSNumber)?.intValue
         return StockQuote(symbol: symbol, name: name,
             exchange: (ticker["primary_exchange"] as? String) ?? (ticker["market"] as? String) ?? "US Market",
