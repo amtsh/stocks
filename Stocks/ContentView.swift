@@ -131,7 +131,7 @@ struct ContentView: View {
                 if !isSearchPresented { ToolbarItem(placement: .topBarTrailing) { EditButton() } }
             }
             .navigationDestination(for: String.self) { symbol in StockDetailView(symbol: symbol) }
-            .sheet(isPresented: $market.isSettingsPresented) { MassiveSettingsView() }
+            .sheet(isPresented: Binding(get: { market.isSettingsPresented }, set: { market.isSettingsPresented = $0 })) { MassiveSettingsView() }
             .task {
                 await market.loadWatchlist()
                 while !Task.isCancelled {
