@@ -3,7 +3,7 @@
 A native SwiftUI stock-research app for US-listed equities, using Apple's public Stocks app screens as a UI reference.
 
 ## Features
-- Watchlist with ticker/company name, quote, daily change, and sparkline.
+- Watchlist with ticker/company name, quote, daily change, and sparkline. Starts empty; users search for and add only the stocks they want to follow.
 - Search, add/remove, and reorder symbols; watchlist persists locally.
 - Interactive historical charts: 1D, 1W, 1M, 6M, 1Y, 2Y, 5Y, and 10Y.
 - Trading context: previous close, day range, 52-week range, volume, exchange, and provider market timestamp when available.
