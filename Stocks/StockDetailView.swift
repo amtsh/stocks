@@ -13,59 +13,77 @@ struct StockDetailView: View {
         ScrollView {
             if let stock {
                 VStack(alignment: .leading, spacing: 24) {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 5) {
                         Text(stock.name).font(.subheadline).foregroundStyle(.secondary)
                         Text(selectedPoint?.value.formatted(.currency(code: stock.currency).precision(.fractionLength(2))) ?? stock.formattedPrice)
-                            .font(.system(size: 38, weight: .bold, design: .rounded)).contentTransition(.numericText())
-                        Text(selectedPoint.map { $0.date.formatted(date: .abbreviated, time: .shortened) } ?? stock.formattedChange)
-                            .font(.subheadline.weight(.medium)).foregroundStyle(chartColor)
+                            .font(.system(size: 38, weight: .bold, design: .rounded)).monospacedDigit()
+                            .contentTransition(.numericText())
+                        HStack(spacing: 7) {
+                            Text(stock.formattedChange).font(.subheadline.weight(.medium))
+                            Text("Today").font(.subheadline).foregroundStyle(.secondary)
+                        }.foregroundStyle(chartColor)
+                        Text("\(stock.exchange) · USD").font(.caption).foregroundStyle(.tertiary)
                     }
                     priceChart(stock).frame(height: 230)
-                    HStack(spacing: 0) {
-                        ForEach(ChartRange.allCases) { item in
-                            Button {
-                                withAnimation(.snappy(duration: 0.2)) { range = item; selectedPoint = nil }
-                                Task { await market.refresh(symbol: symbol, range: item) }
-                            } label: {
-                                Text(item.rawValue).font(.system(size: 13, weight: range == item ? .semibold : .medium))
-                                    .foregroundStyle(range == item ? Color.white : Color.secondary)
-                                    .frame(maxWidth: .infinity).padding(.vertical, 8)
-                                    .background { if range == item { Capsule().fill(Color.accentColor) } }
-                            }.buttonStyle(.plain)
-                        }
-                    }.padding(4).background(Color(uiColor: .secondarySystemBackground), in: Capsule())
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(ChartRange.allCases) { item in
+                                Button {
+                                    range = item
+                                    selectedPoint = nil
+                                    Task { await market.refresh(symbol: symbol, range: item) }
+                                } label: {
+                                    Text(item.rawValue)
+                                        .font(.system(size: 13, weight: range == item ? .semibold : .medium))
+                                        .foregroundStyle(range == item ? Color.white : Color.secondary)
+                                        .padding(.horizontal, 12).padding(.vertical, 8)
+                                        .background { if range == item { Capsule().fill(Color.accentColor) } }
+                                }.buttonStyle(.plain)
+                            }
+                        }.padding(.horizontal, 2)
+                    }
                     VStack(alignment: .leading, spacing: 14) {
-                        Text("KEY DATA").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
+                        Text("STOCK DETAILS").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
                         dataRow("Previous close", value: stock.previousClose.formatted(.currency(code: stock.currency)))
                         dataRow("Day range", value: dayRange(stock))
+                        dataRow("Volume", value: stock.volume?.formatted() ?? "—")
+                        dataRow("Market cap", value: stock.marketCap.map { $0.formatted(.number.notation(.compactName)) } ?? "—")
                         dataRow("Exchange", value: stock.exchange)
-                        dataRow("Currency", value: stock.currency)
-                        dataRow("Last market update", value: stock.marketTime?.formatted(date: .omitted, time: .shortened) ?? "—")
+                        dataRow("Last trade", value: stock.marketTime?.formatted(date: .omitted, time: .shortened) ?? "—")
                     }.padding(16).background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    Text("Market data from Yahoo Finance. Quotes may be delayed and are not intended for trading.")
-                        .font(.caption2).foregroundStyle(.tertiary)
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle").foregroundStyle(.secondary)
+                        Text("Market data from Massive. Real-time availability depends on your subscription and exchange entitlements.")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
                 }.padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 32)
             } else {
                 ContentUnavailableView("Loading quote", systemImage: "chart.line.uptrend.xyaxis", description: Text("Fetching the latest available market data."))
                     .frame(maxWidth: .infinity, minHeight: 400)
             }
-        }.background(Color(uiColor: .systemBackground))
-            .navigationTitle(symbol).navigationBarTitleDisplayMode(.inline)
-            .task(id: symbol) { await market.refresh(symbol: symbol, range: range) }
+        }
+        .background(Color(uiColor: .systemBackground))
+        .navigationTitle(symbol).navigationBarTitleDisplayMode(.inline)
+        .task(id: symbol) { await market.refresh(symbol: symbol, range: range) }
     }
+
     @ViewBuilder private func priceChart(_ stock: StockQuote) -> some View {
         if stock.points.count > 1 {
             Chart {
                 ForEach(stock.points) { point in
-                    AreaMark(x: .value("Time", point.date), yStart: .value("Baseline", stock.points.map(\.value).min() ?? point.value), yEnd: .value("Price", point.value))
+                    AreaMark(x: .value("Time", point.date),
+                             yStart: .value("Baseline", stock.points.map(\.value).min() ?? point.value),
+                             yEnd: .value("Price", point.value))
                         .foregroundStyle(LinearGradient(colors: [chartColor.opacity(0.22), chartColor.opacity(0.01)], startPoint: .top, endPoint: .bottom))
                         .interpolationMethod(.catmullRom)
                     LineMark(x: .value("Time", point.date), y: .value("Price", point.value))
                         .foregroundStyle(chartColor).lineStyle(StrokeStyle(lineWidth: 2)).interpolationMethod(.catmullRom)
                 }
                 if let selectedPoint {
-                    RuleMark(x: .value("Selected time", selectedPoint.date)).foregroundStyle(.secondary.opacity(0.5)).lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                    PointMark(x: .value("Selected time", selectedPoint.date), y: .value("Selected price", selectedPoint.value)).foregroundStyle(chartColor).symbolSize(45)
+                    RuleMark(x: .value("Selected time", selectedPoint.date))
+                        .foregroundStyle(.secondary.opacity(0.5)).lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    PointMark(x: .value("Selected time", selectedPoint.date), y: .value("Selected price", selectedPoint.value))
+                        .foregroundStyle(chartColor).symbolSize(45)
                 }
             }
             .chartXAxis(.hidden).chartYAxis(.hidden).chartYScale(domain: chartDomain(stock.points))
@@ -83,7 +101,7 @@ struct StockDetailView: View {
                 }
             }
         } else {
-            ContentUnavailableView("Chart unavailable", systemImage: "chart.xyaxis.line", description: Text("There isn't enough history for this range yet."))
+            ContentUnavailableView("Chart unavailable", systemImage: "chart.xyaxis.line", description: Text("No history is available for this range."))
         }
     }
     private func chartDomain(_ points: [ChartPoint]) -> ClosedRange<Double> {
@@ -92,7 +110,7 @@ struct StockDetailView: View {
         return (low - padding)...(high + padding)
     }
     private func dayRange(_ stock: StockQuote) -> String {
-        guard let low = stock.points.map(\.value).min(), let high = stock.points.map(\.value).max() else { return "—" }
+        guard let low = stock.dayLow, let high = stock.dayHigh else { return "—" }
         return "\(low.formatted(.currency(code: stock.currency))) – \(high.formatted(.currency(code: stock.currency)))"
     }
     private func dataRow(_ title: String, value: String) -> some View {
