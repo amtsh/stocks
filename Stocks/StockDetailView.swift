@@ -121,13 +121,27 @@ struct StockDetailView: View {
     /// Try Revolut's app URL first. Its stock-specific deep-link format is not publicly documented,
     /// so fall back to Revolut's official stocks page if iOS cannot open the app URL.
     private func openInRevolut(_ symbol: String) {
-        let encodedSymbol = symbol.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? symbol
-        let appURL = URL(string: "revolut://app/stocks/\(encodedSymbol)")!
-        let fallbackURL = URL(string: "https://www.revolut.com/stocks/")!
+        let encodedSymbol = symbol.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? symbol
+        // Revolut does not document a public ticker-search deep link. Try a search-style route,
+        // then its app root, and finally the official stocks page if neither app URL opens.
+        let candidates = [
+            URL(string: "revolut://app/stocks/search?query=\(encodedSymbol)"),
+            URL(string: "revolut://app/stocks?search=\(encodedSymbol)"),
+            URL(string: "revolut://app")
+        ].compactMap { $0 }
+        openRevolutURL(candidates, fallback: URL(string: "https://www.revolut.com/stocks/")!)
+    }
 
-        UIApplication.shared.open(appURL, options: [:]) { opened in
-            guard !opened else { return }
-            UIApplication.shared.open(fallbackURL, options: [:])
+    private func openRevolutURL(_ candidates: [URL], fallback: URL) {
+        guard let first = candidates.first else {
+            UIApplication.shared.open(fallback, options: [:])
+            return
+        }
+        UIApplication.shared.open(first, options: [:]) { opened in
+            if opened {
+                return
+            }
+            openRevolutURL(Array(candidates.dropFirst()), fallback: fallback)
         }
     }
 
