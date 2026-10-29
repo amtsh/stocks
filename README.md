@@ -6,7 +6,7 @@ A native SwiftUI stock-research app for US-listed equities, using Apple's public
 - Watchlist with ticker/company name, quote, daily change, and sparkline.
 - Search, add/remove, and reorder symbols; watchlist persists locally.
 - Interactive historical charts: 1D, 1W, 1M, 6M, 1Y, 2Y, 5Y, and 10Y.
-- Trading context: previous close, day range, volume, exchange, and provider market timestamp when available.
+- Trading context: previous close, day range, 52-week range, volume, exchange, and provider market timestamp when available.
 - Technical research calculated locally from one year of daily closes: RSI (14), SMA (20/50/200), MACD (12, 26), and MACD signal (9).
 - Data validation rejects non-finite/non-positive prices and sorts historical points chronologically.
 - Data-source caveats and timestamp visibility in the stock detail view.
@@ -19,7 +19,7 @@ A native SwiftUI stock-research app for US-listed equities, using Apple's public
 |---|---|---|
 | Provider | Yahoo Finance unofficial chart/search endpoints | No supported API contract or real-time SLA; endpoints can change or be throttled |
 | Freshness | Shows the provider's market timestamp when available | Timestamp is not proof of real-time delivery; app does not independently verify exchange feed latency |
-| Polling | Watchlist polls every 15 seconds while open | Too aggressive for an unofficial endpoint; rate limits and request failures are possible |
+| Polling | Watchlist polls every 60 seconds while open | Too aggressive for an unofficial endpoint; rate limits and request failures are possible |
 | Price validation | Rejects invalid/non-positive quote prices and filters invalid chart closes | No independent second-source cross-check; stale-but-valid prices can still pass |
 | Daily change | Uses provider regular market price and previous close metadata | May not represent an executable live bid/ask; pre/post-market semantics are not explicit |
 | Historical data | Uses chart endpoint intervals per selected range | Missing bars, adjusted-price behavior, and provider corrections are not audited against an independent feed |
