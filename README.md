@@ -1,25 +1,30 @@
 # Stocks for iOS
 
-A native SwiftUI recreation of the Apple Stocks watchlist experience, focused on US-listed equities.
+A native SwiftUI Stocks-style app for US-listed equities, using Apple's public Stocks app screens as the UI reference.
 
 ## Features
-- Native iPhone/iPad interface using SwiftUI and current system navigation/material conventions.
-- Watchlist with quotes, daily change, percentage change, and sparklines.
-- Search US-listed stocks, add/remove symbols, and reorder the watchlist.
-- Stock detail charts for 1D, 1W, 1M, 6M, 1Y, and 5Y, plus key quote details.
-- Local watchlist persistence, light/dark appearance, automatic 30-second refresh while open.
+- Watchlist layout inspired by Apple's current Stocks app: date heading, My Symbols, ticker/company, sparkline, quote, and change badge.
+- Search US common stocks, add/remove symbols, and reorder the watchlist.
+- Stock detail charts with interactive selection and ranges: 1D, 1W, 1M, 6M, 1Y, 2Y, 5Y, and 10Y.
+- Details include previous close, day range, volume, market cap when available, exchange, and last trade time.
+- Massive market-data integration. API key is stored in iOS Keychain; never embedded in source.
+- Automatic refresh while app is open; watchlist persists locally.
 
-## Market-data limitation
-The app uses Yahoo Finance's public chart/search endpoints. This is **not a guaranteed real-time feed**: delays, availability, refresh limits, and exchange coverage are controlled by Yahoo and may vary. The UI identifies this limitation. Do not use it for trading decisions.
+## Real-time data: important setup
+This app integrates Massive's US equities API. **A live quote is only available if your Massive account has the appropriate real-time entitlement.** The provider lists Stocks Advanced at $199/month for individual, non-professional use; lower tiers may return 15-minute delayed data. Check current terms, exchange entitlements, and your use classification before subscribing.
 
-For contractually real-time US exchange quotes, integrate a licensed provider whose plan explicitly includes real-time US equities. Keep provider credentials server-side, never in a distributed iOS app.
+1. Create a Massive account and choose a plan that explicitly includes real-time US stock data: https://massive.com/stocks
+2. Create an API key in the provider dashboard.
+3. Run the app, tap the gear icon, and paste the key into Market Data settings. The key is saved in this device's Keychain.
+4. Confirm that your subscription grants the real-time snapshot endpoint. A valid API key by itself does not guarantee real-time prices.
 
-Search filters to US equity exchange codes and excludes ETFs, indices, currencies, and other instrument types.
+The app uses REST snapshots and historical aggregates, refreshing the watchlist every 15 seconds while active. It does not claim exchange-grade streaming tick updates; this implementation is real-time REST polling, subject to provider latency and plan terms. Quotes are for informational use only.
 
 ## Requirements and run
 - Xcode 27+ with the iOS 27 SDK
 - iOS 27+ device or simulator
-- Internet connection
+- Internet access
+- Massive API key with an appropriate plan for real-time quotes
 
 1. Clone the repository.
 2. Open `Stocks.xcodeproj` in Xcode.
@@ -27,16 +32,17 @@ Search filters to US equity exchange codes and excludes ETFs, indices, currencie
 4. Set a development team under Signing if prompted.
 5. Build and run.
 
-No API key is required for the current public Yahoo integration. The endpoint is unofficial and can change or rate-limit requests.
-
-## Structure
+## Project structure
 - `Stocks/StocksApp.swift` — app entry point
-- `Stocks/ContentView.swift` — watchlist and search
-- `Stocks/StockData.swift` — models, persistence, market-data client
-- `Stocks/StockDetailView.swift` — chart and quote details
+- `Stocks/ContentView.swift` — watchlist, search, sparklines
+- `Stocks/StockData.swift` — models, Keychain, Massive API client
+- `Stocks/StockDetailView.swift` — interactive charts and quote metrics
+- `Stocks/MassiveSettingsView.swift` — secure API-key setup
 
-## Design reference
-Based on public Apple Stocks user-guide patterns: symbol/name, sparkline, quote and change; searchable symbols; chart ranges and detail metrics. Apple's proprietary assets are not bundled.
-
+## UI reference screenshots
+Reviewed Apple Support's current iOS Stocks guide and screenshots for the watchlist, symbol search, interactive chart, and stock detail flow:
 - https://support.apple.com/guide/iphone/check-stocks-iph1ac0b1bc/27/ios
 - https://support.apple.com/guide/iphone/manage-watchlists-iph4fff7afb5/27/ios
+- https://developer.apple.com/design/resources/
+
+This is a faithful native-style recreation, not Apple's original source code or proprietary assets.
