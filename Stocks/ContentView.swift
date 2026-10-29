@@ -140,7 +140,7 @@ struct ContentView: View {
             .task {
                 await market.loadWatchlist()
                 while !Task.isCancelled {
-                    try? await Task.sleep(for: .seconds(15))
+                    try? await Task.sleep(for: .seconds(60))
                     if !Task.isCancelled { await market.loadWatchlist() }
                 }
             }
