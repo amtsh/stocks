@@ -15,6 +15,37 @@ struct ContentView: View {
             List {
                 if isSearchPresented {
                     searchSection
+                } else if market.symbols.isEmpty {
+                    Section {
+                        VStack(spacing: 14) {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .font(.system(size: 42, weight: .light))
+                                .foregroundStyle(.secondary)
+                            Text("Your watchlist is empty")
+                                .font(.title3.weight(.semibold))
+                            Text("Search for companies and add only the stocks you want to follow.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: 280)
+                            Button {
+                                withAnimation(.snappy) { isSearchPresented = true }
+                                searchFocused = true
+                            } label: {
+                                Label("Find stocks", systemImage: "magnifyingglass")
+                                    .font(.headline)
+                                    .padding(.horizontal, 18)
+                                    .padding(.vertical, 10)
+                                    .background(Color.accentColor, in: Capsule())
+                                    .foregroundStyle(.white)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 56)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                    }
                 } else {
                     Section {
                         VStack(alignment: .leading, spacing: 8) {
