@@ -2,7 +2,7 @@ import SwiftUI
 
 /// A transparent, editable scenario model. Financial inputs are deliberately user-supplied:
 /// the current market-data adapter does not provide reliable fundamental estimates.
-struct InvestmentAssumptions: Codable {
+struct InvestmentAssumptions: Codable, Equatable {
     var freeCashFlowPerShare = 5.0
     var discountRate = 0.10
     var terminalGrowthRate = 0.025
