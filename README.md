@@ -44,17 +44,20 @@ No market data is guaranteed real-time. This app is for informational research o
 - Market capitalization is not shown as a real value because the chart endpoint does not reliably provide it.
 
 ## Requirements and run
-- Xcode 27+ with the iOS 27 SDK
-- iOS 27+ device or simulator
+- Xcode 16 or later with the iOS SDK
+- iOS 17.0+ device or simulator
 - Internet access
 
 1. Clone the repository.
-2. Open `Stocks.xcodeproj` in Xcode.
-3. Select the Stocks scheme and an iOS 27 simulator or connected iPhone.
+2. Open `Stocks.xcodeproj` in Xcode (or open the shared `Stocks` scheme from the scheme selector).
+3. Select the `Stocks` scheme and an iOS 17.0+ simulator or connected iPhone.
 4. Set a development team under Signing if prompted.
 5. Build and run.
 
 ## Project structure
+- `Stocks.xcodeproj/project.pbxproj` — iOS app target and build settings
+- `Stocks.xcodeproj/xcshareddata/xcschemes/Stocks.xcscheme` — shared build/run scheme
+- `Stocks.xcodeproj/project.xcworkspace/contents.xcworkspacedata` — Xcode workspace metadata
 - `Stocks/StocksApp.swift` — app entry point
 - `Stocks/ContentView.swift` — watchlist, search, sparklines
 - `Stocks/StockData.swift` — models, indicator calculations, Yahoo Finance client
