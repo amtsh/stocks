@@ -17,6 +17,7 @@ struct InvestmentAssumptions: Codable, Equatable {
     var catalysts = ""
     var risks = ""
     var sourceURL = ""
+    var sourceDate = ""
 
     static func load(for symbol: String) -> InvestmentAssumptions {
         guard let data = UserDefaults.standard.data(forKey: "thesis.assumptions.\(symbol)"),
@@ -163,7 +164,7 @@ struct InvestmentThesisView: View {
 
     private var scenariosCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("5-YEAR RETURN SCENARIOS".replacingOccurrences(of: "5", with: "\(assumptions.years)"))
+            Text("\(assumptions.years)-YEAR RETURN SCENARIOS")
                 .font(.caption.weight(.bold)).tracking(0.7).foregroundStyle(.secondary)
             ForEach(scenarios) { scenario in
                 let target = scenario.targetPrice(fcfPerShare: assumptions.freeCashFlowPerShare, years: assumptions.years)
@@ -199,6 +200,8 @@ struct InvestmentThesisView: View {
                 }.foregroundStyle(.primary)
             }.buttonStyle(.plain)
             if showAssumptions {
+                Text("Starter values are placeholders, not company data. Replace FCF/share with the latest reported figure and cite the filing below.")
+                    .font(.caption).foregroundStyle(.secondary)
                 numberField("Current FCF per share", value: $assumptions.freeCashFlowPerShare, suffix: currency)
                 numberField("Discount rate", value: $assumptions.discountRate, isPercent: true)
                 numberField("Perpetual growth", value: $assumptions.terminalGrowthRate, isPercent: true)
@@ -246,8 +249,10 @@ struct InvestmentThesisView: View {
                 .font(.subheadline)
             Link("Search SEC company filings", destination: URL(string: "https://www.sec.gov/edgar/search/")!)
                 .font(.subheadline)
-            Text("Financial assumptions are user-entered, not live reported data. For every thesis claim, add the filing / investor-relations URL in your notes and record the publication date.")
+            Text("Financial assumptions are user-entered, not live reported data. Record the filing date and source URL for the numbers you use.")
                 .font(.caption).foregroundStyle(.secondary)
+            TextField("Financial data as-of / filing date", text: $assumptions.sourceDate)
+                .textInputAutocapitalization(.never).textFieldStyle(.roundedBorder)
             TextField("Source URL (optional)", text: $assumptions.sourceURL)
                 .textInputAutocapitalization(.never).keyboardType(.URL).autocorrectionDisabled()
                 .textFieldStyle(.roundedBorder)
