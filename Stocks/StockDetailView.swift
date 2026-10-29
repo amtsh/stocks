@@ -47,6 +47,33 @@ struct StockDetailView: View {
                         }.padding(.horizontal, 2)
                     }
                     technicalsSection
+                    NavigationLink {
+                        InvestmentThesisView(
+                            symbol: stock.symbol,
+                            companyName: stock.name,
+                            currentPrice: stock.price,
+                            currency: stock.currency,
+                            quoteTimestamp: stock.marketTime
+                        )
+                    } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: "scope")
+                                .font(.title2)
+                                .foregroundStyle(Color.accentColor)
+                                .frame(width: 44, height: 44)
+                                .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Investment thesis").font(.headline).foregroundStyle(.primary)
+                                Text("What growth is priced in? Explore editable bear, base and bull cases.")
+                                    .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
+                        }
+                        .padding(16)
+                        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+                    }
+                    .buttonStyle(.plain)
                     VStack(alignment: .leading, spacing: 14) {
                         Text("COMPANY & TRADING DATA").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
                         dataRow("Previous close", value: stock.previousClose.formatted(.currency(code: stock.currency)))
