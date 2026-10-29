@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var isSearchPresented = false
     @State private var searchTask: Task<Void, Never>?
+    @FocusState private var searchFocused: Bool
     @State private var showEdit = false
 
     private var searchMatches: [StockSearchResult] { market.searchResults.filter { !market.symbols.contains($0.symbol) } }
@@ -85,29 +86,33 @@ struct ContentView: View {
             .scrollContentBackground(.hidden)
             .background(Color(uiColor: .systemBackground))
             .safeAreaInset(edge: .top, spacing: 0) {
-                if isSearchPresented {
-                    HStack(spacing: 10) {
-                        Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                        TextField("Search US stocks", text: $searchText)
-                            .textInputAutocapitalization(.characters).autocorrectionDisabled()
-                            .onChange(of: searchText) { _, query in
-                                searchTask?.cancel()
-                                searchTask = Task {
-                                    try? await Task.sleep(for: .milliseconds(250))
-                                    guard !Task.isCancelled else { return }
-                                    await market.search(query)
-                                }
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                    TextField("Search", text: $searchText)
+                        .focused($searchFocused)
+                        .textInputAutocapitalization(.characters).autocorrectionDisabled()
+                        .onChange(of: searchText) { _, query in
+                            if !query.isEmpty { isSearchPresented = true }
+                            searchTask?.cancel()
+                            searchTask = Task {
+                                try? await Task.sleep(for: .milliseconds(250))
+                                guard !Task.isCancelled else { return }
+                                await market.search(query)
                             }
-                        if !searchText.isEmpty {
-                            Button { searchText = ""; market.clearSearch() } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
-                                .buttonStyle(.plain)
                         }
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                            market.clearSearch()
+                            searchFocused = true
+                        } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
+                            .buttonStyle(.plain)
                     }
-                    .padding(.horizontal, 14).padding(.vertical, 11)
-                    .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .padding(.horizontal, 16).padding(.bottom, 8)
-                    .background(.bar)
                 }
+                .padding(.horizontal, 14).padding(.vertical, 11)
+                .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.horizontal, 16).padding(.bottom, 8)
+                .background(.bar)
             }
             .navigationTitle(isSearchPresented ? "Search" : "Stocks")
             .navigationBarTitleDisplayMode(.large)
