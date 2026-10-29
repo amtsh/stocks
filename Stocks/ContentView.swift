@@ -10,6 +10,21 @@ struct ContentView: View {
         market.searchResults.filter { !market.symbols.contains($0.symbol) }
     }
 
+    /// Estimates the regular US equity session in New York time.
+    /// This schedule check does not account for exchange holidays or early closes.
+    private var isUSMarketOpen: Bool {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/New_York") ?? .current
+        let now = Date()
+        let weekday = calendar.component(.weekday, from: now)
+        let minutes = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
+        return (2...6).contains(weekday) && minutes >= 9 * 60 + 30 && minutes < 16 * 60
+    }
+
+    private var headerDate: String {
+        Date.now.formatted(.dateTime.day().month(.wide).locale(Locale(identifier: "en_GB")))
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -37,18 +52,35 @@ struct ContentView: View {
                     Section {
                         if let updated = market.lastUpdated {
                             Text("Last updated \(updated.formatted(date: .omitted, time: .shortened))")
+                                .listRowSeparator(.hidden, edges: .all)
                         }
                         if let error = market.errorMessage {
                             Text(error)
                                 .foregroundStyle(.red)
+                                .listRowSeparator(.hidden, edges: .all)
                         }
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .listSectionSeparator(.hidden, edges: .bottom)
                 }
             }
             .listStyle(.plain)
-            .navigationTitle("Stocks")
+            .navigationTitle(headerDate)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 7) {
+                        Text(headerDate)
+                            .font(.headline)
+                        Circle()
+                            .fill(isUSMarketOpen ? Color.green : Color.red)
+                            .frame(width: 8, height: 8)
+                            .accessibilityLabel(isUSMarketOpen ? "US market open" : "US market closed")
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
             .navigationDestination(for: String.self) { symbol in
                 StockDetailView(symbol: symbol)
             }
