@@ -28,6 +28,7 @@ struct StockDetailView: View {
                         Text("\(stock.exchange) · \(stock.currency)").font(.caption).foregroundStyle(.tertiary)
                         quoteTimestamp(stock)
                     }
+                    externalAppLinks(stock)
                     priceChart(stock).frame(height: 230)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 6) {
@@ -107,6 +108,33 @@ struct StockDetailView: View {
             }
             isLoadingIndicators = false
             await quoteLoad
+        }
+    }
+
+
+    private func externalAppLinks(_ stock: StockQuote) -> some View {
+        HStack(spacing: 12) {
+            if let appleStocksURL = URL(string: "stocks://?symbol=\(stock.symbol)") {
+                Link(destination: appleStocksURL) {
+                    Label("Apple Stocks", systemImage: "chart.xyaxis.line")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+            }
+
+            if let revolutURL = URL(string: "https://www.revolut.com/stocks/\(stock.symbol.lowercased())/") {
+                Link(destination: revolutURL) {
+                    Label("Revolut", systemImage: "arrow.up.right")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 
