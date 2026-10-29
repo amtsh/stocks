@@ -172,7 +172,7 @@ struct InvestmentThesisView: View {
                     HStack {
                         Text(scenario.name).font(.headline)
                         Spacer()
-                        Text(annualReturn, format: .percent.precision(.sign(strategy: .always).integerLength(1)... .fractionLength(1)))
+                        Text(annualReturn.formatted(.percent.precision(.fractionLength(1))))
                             .font(.headline.monospacedDigit()).foregroundStyle(scenario.color)
                     }
                     HStack {
