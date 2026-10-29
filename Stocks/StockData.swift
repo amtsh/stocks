@@ -50,7 +50,7 @@ struct TechnicalIndicators: Sendable {
         rsi14 = Self.rsi(closes, period: 14)
         let fast = Self.emaSeries(closes, period: 12)
         let slow = Self.emaSeries(closes, period: 26)
-        let macdSeries = zip(fast, slow).map(-)
+        let macdSeries = zip(fast.dropFirst(14), slow).map { $0.0 - $0.1 }
         macd = macdSeries.last
         macdSignal = Self.emaSeries(macdSeries, period: 9).last
     }
@@ -72,7 +72,7 @@ struct TechnicalIndicators: Sendable {
 
     private static func rsi(_ values: [Double], period: Int) -> Double? {
         guard values.count > period else { return nil }
-        let changes = zip(values.dropFirst(), values).map(-)
+        let changes = zip(values.dropFirst(), values).map { $0.0 - $0.1 }
         let window = changes.suffix(period)
         let gains = window.filter { $0 > 0 }.reduce(0, +) / Double(period)
         let losses = window.filter { $0 < 0 }.reduce(0) { $0 + abs($1) } / Double(period)
