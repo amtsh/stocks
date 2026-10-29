@@ -129,7 +129,7 @@ final class MarketStore {
     func saveAPIKey(_ key: String) throws { try APIKeyVault.save(key); errorMessage = nil }
     func removeAPIKey() { APIKeyVault.delete(); quotes = [:]; errorMessage = nil }
     func loadWatchlist() async {
-        guard apiKeyConfigured else { isSettingsPresented = true; return }
+        guard apiKeyConfigured else { return }
         isRefreshing = true
         defer { isRefreshing = false }
         await withTaskGroup(of: (String, StockQuote?).self) { group in
