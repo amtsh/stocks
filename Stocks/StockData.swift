@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-struct StockQuote: Identifiable, Hashable {
+struct StockQuote: Identifiable, Hashable, Sendable {
     let symbol: String
     var name: String
     var exchange: String
@@ -19,18 +19,18 @@ struct StockQuote: Identifiable, Hashable {
         "\(change >= 0 ? "+" : "−")\(abs(change).formatted(.number.precision(.fractionLength(2)))) (\(changePercent >= 0 ? "+" : "−")\(abs(changePercent).formatted(.number.precision(.fractionLength(2)))%)"
     }
 }
-struct ChartPoint: Identifiable, Hashable {
+struct ChartPoint: Identifiable, Hashable, Sendable {
     let date: Date
     let value: Double
     var id: Date { date }
 }
-struct StockSearchResult: Identifiable, Hashable {
+struct StockSearchResult: Identifiable, Hashable, Sendable {
     let symbol: String
     let name: String
     let exchange: String
     var id: String { symbol }
 }
-enum ChartRange: String, CaseIterable, Identifiable {
+enum ChartRange: String, CaseIterable, Identifiable, Sendable {
     case day = "1D", week = "1W", month = "1M", sixMonths = "6M", year = "1Y", fiveYears = "5Y"
     var id: String { rawValue }
     var queryRange: String {
