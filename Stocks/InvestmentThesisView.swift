@@ -52,20 +52,16 @@ private struct ReturnScenario: Identifiable {
 
 struct InvestmentThesisView: View {
     let symbol: String
-    let companyName: String
     let currentPrice: Double
     let currency: String
-    let quoteTimestamp: Date?
 
     @State private var assumptions: InvestmentAssumptions
-    @State private var showAssumptions = true
+    @State private var showAssumptions = false
 
-    init(symbol: String, companyName: String, currentPrice: Double, currency: String, quoteTimestamp: Date?) {
+    init(symbol: String, currentPrice: Double, currency: String) {
         self.symbol = symbol
-        self.companyName = companyName
         self.currentPrice = currentPrice
         self.currency = currency
-        self.quoteTimestamp = quoteTimestamp
         _assumptions = State(initialValue: InvestmentAssumptions.load(for: symbol))
     }
 
@@ -107,6 +103,8 @@ struct InvestmentThesisView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("INVESTMENT THESIS")
                 .font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
+            Text("Scenario estimates use editable placeholder assumptions—not verified company fundamentals.")
+                .font(.caption).foregroundStyle(.secondary)
             impliedExpectationsCard
             scenariosCard
             DisclosureGroup("Thesis notes") {
@@ -125,19 +123,6 @@ struct InvestmentThesisView: View {
             .font(.headline).tint(.primary)
         }
         .onChange(of: assumptions) { _, newValue in newValue.save(for: symbol) }
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(companyName).font(.subheadline).foregroundStyle(.secondary)
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(symbol).font(.title2.bold())
-                Spacer()
-                Text(currentPrice.formatted(.currency(code: currency))).font(.title2.bold().monospacedDigit())
-            }
-            Text("Price reference: " + (quoteTimestamp?.formatted(date: .abbreviated, time: .shortened) ?? "timestamp unavailable"))
-                .font(.caption).foregroundStyle(.secondary)
-        }
     }
 
     private var impliedExpectationsCard: some View {
