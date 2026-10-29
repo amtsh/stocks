@@ -192,16 +192,6 @@ struct StockDetailView: View {
         }
     }
 
-    private func quoteTimestamp(_ stock: StockQuote) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: stock.marketTime == nil ? "questionmark.circle" : "clock")
-            if let marketTime = stock.marketTime {
-                Text("Market timestamp: \(marketTime.formatted(date: .omitted, time: .shortened))")
-            } else {
-                Text("Market timestamp unavailable")
-            }
-        }.font(.caption2).foregroundStyle(.secondary)
-    }
     private func chartDomain(_ points: [ChartPoint]) -> ClosedRange<Double> {
         let values = points.map(\.value), low = values.min() ?? 0, high = values.max() ?? 1
         let padding = max((high - low) * 0.12, high * 0.002)
