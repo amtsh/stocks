@@ -207,10 +207,10 @@ enum YahooFinanceClient {
         let previousClose = (meta["previousClose"] as? NSNumber)?.doubleValue
             ?? (meta["chartPreviousClose"] as? NSNumber)?.doubleValue
             ?? price
-        let timestamps = result["timestamp"] as? [Double] ?? []
+        let timestamps = (result["timestamp"] as? [NSNumber] ?? []).map(\.doubleValue)
         let quoteBlock = ((result["indicators"] as? [String: Any])?["quote"] as? [[String: Any]])?.first ?? [:]
         let closes = quoteBlock["close"] as? [Any] ?? []
-        let points = zip(timestamps, closes).compactMap { timestamp, rawValue -> ChartPoint? in
+        let points = zip(timestamps, closes).compactMap { (timestamp, rawValue) -> ChartPoint? in
             guard let value = rawValue as? NSNumber, value.doubleValue > 0 else { return nil }
             return ChartPoint(date: Date(timeIntervalSince1970: timestamp), value: value.doubleValue)
         }
