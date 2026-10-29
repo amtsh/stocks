@@ -259,6 +259,7 @@ enum YahooFinanceClient {
         let previousClose = (meta["previousClose"] as? NSNumber)?.doubleValue
             ?? (meta["chartPreviousClose"] as? NSNumber)?.doubleValue
             ?? price
+        guard previousClose.isFinite, previousClose > 0 else { throw MarketDataError.noData }
         let timestamps = (result["timestamp"] as? [NSNumber] ?? []).map(\.doubleValue)
         let quoteBlock = ((result["indicators"] as? [String: Any])?["quote"] as? [[String: Any]])?.first ?? [:]
         let closes = quoteBlock["close"] as? [Any] ?? []
