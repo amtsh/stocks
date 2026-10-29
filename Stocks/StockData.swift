@@ -157,7 +157,8 @@ final class MarketStore {
         symbols.append(result.symbol)
         await refresh(symbol: result.symbol)
     }
-    func remove(_ symbol: String) { symbols.removeAll { $0 != symbol }; quotes.removeValue(forKey: symbol) }
+    func remove(_ symbol: String) { symbols.removeAll { $0 == symbol }; quotes.removeValue(forKey: symbol) }
+    func clearSearch() { searchResults = [] }
     func move(from source: IndexSet, to destination: Int) {
         var reordered = symbols
         reordered.move(fromOffsets: source, toOffset: destination)
