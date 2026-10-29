@@ -9,7 +9,7 @@ The current Yahoo Finance integration is useful for a personal research prototyp
 
 - **High — no real-time guarantee:** quote timestamps are provider metadata; the client cannot verify exchange delivery latency or whether the quote is delayed.
 - **High — unofficial endpoint dependency:** the app relies on undocumented endpoints that can be throttled or changed.
-- **Medium — aggressive polling:** watchlist refreshes every 15 seconds and fans out requests concurrently. Rate limiting is likely under load.
+- **Medium — aggressive polling:** watchlist refreshes every 60 seconds and fans out requests concurrently. Rate limiting is likely under load.
 - **Medium — no cross-source validation:** valid-looking prices can be stale or wrong without an independent comparison.
 - **Medium — market-session semantics:** regular-market price and previous close are displayed without a robust regular/pre/post-market state.
 - **Medium — incomplete fundamentals:** market capitalization and valuation metrics are not provided by the current chart response.
