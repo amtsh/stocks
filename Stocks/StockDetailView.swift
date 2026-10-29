@@ -1,5 +1,6 @@
 import SwiftUI
 import Charts
+import UIKit
 
 struct StockDetailView: View {
     @Environment(MarketStore.self) private var market
@@ -125,16 +126,30 @@ struct StockDetailView: View {
                 .buttonStyle(.plain)
             }
 
-            if let revolutURL = URL(string: "https://www.revolut.com/stocks/\(stock.symbol.lowercased())/") {
-                Link(destination: revolutURL) {
-                    Label("Revolut", systemImage: "arrow.up.right")
-                        .font(.subheadline.weight(.semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
-                }
-                .buttonStyle(.plain)
+            Button {
+                openInRevolut(stock.symbol)
+            } label: {
+                Label("Revolut", systemImage: "arrow.up.right")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 13)
+                    .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
             }
+            .buttonStyle(.plain)
+        }
+    }
+
+
+    /// Try Revolut's app URL first. Its stock-specific deep-link format is not publicly documented,
+    /// so fall back to Revolut's official stocks page if iOS cannot open the app URL.
+    private func openInRevolut(_ symbol: String) {
+        let encodedSymbol = symbol.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? symbol
+        let appURL = URL(string: "revolut://app/stocks/\(encodedSymbol)")!
+        let fallbackURL = URL(string: "https://www.revolut.com/stocks/")!
+
+        UIApplication.shared.open(appURL, options: [:]) { opened in
+            guard !opened else { return }
+            UIApplication.shared.open(fallbackURL, options: [:])
         }
     }
 
