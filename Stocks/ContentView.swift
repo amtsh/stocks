@@ -50,7 +50,7 @@ struct ContentView: View {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(symbol).font(.system(size: 17, weight: .semibold))
-                                        Text(market.apiKeyConfigured ? "Waiting for quote…" : "API key required")
+                                        Text("Waiting for quote…")
                                             .font(.caption).foregroundStyle(.secondary)
                                     }
                                     Spacer()
@@ -151,9 +151,6 @@ struct ContentView: View {
         Section {
             if market.isSearching {
                 HStack { Spacer(); ProgressView(); Spacer() }.listRowSeparator(.hidden)
-            } else if false {
-                ContentUnavailableView("Connect market data", systemImage: "key.horizontal", description: Text("Yahoo Finance data is currently unavailable."))
-                    .listRowSeparator(.hidden)
             } else if searchText.isEmpty {
                 ContentUnavailableView("Find a stock", systemImage: "magnifyingglass", description: Text("Search US-listed companies by name or ticker using Yahoo Finance."))
                     .listRowSeparator(.hidden)
