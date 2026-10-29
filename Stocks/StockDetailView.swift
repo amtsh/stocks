@@ -6,8 +6,11 @@ struct StockDetailView: View {
     let symbol: String
     @State private var range: ChartRange = .day
     @State private var selectedPoint: ChartPoint?
+    @State private var indicatorPoints: [ChartPoint] = []
+    @State private var isLoadingIndicators = true
     private var stock: StockQuote? { market.quote(for: symbol) }
     private var chartColor: Color { (stock?.isPositive ?? true) ? .green : .red }
+    private var indicators: TechnicalIndicators { TechnicalIndicators(points: indicatorPoints) }
 
     var body: some View {
         ScrollView {
@@ -22,7 +25,8 @@ struct StockDetailView: View {
                             Text(stock.formattedChange).font(.subheadline.weight(.medium))
                             Text("Today").font(.subheadline).foregroundStyle(.secondary)
                         }.foregroundStyle(chartColor)
-                        Text("\(stock.exchange) · USD").font(.caption).foregroundStyle(.tertiary)
+                        Text("\(stock.exchange) · \(stock.currency)").font(.caption).foregroundStyle(.tertiary)
+                        quoteTimestamp(stock)
                     }
                     priceChart(stock).frame(height: 230)
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -42,18 +46,19 @@ struct StockDetailView: View {
                             }
                         }.padding(.horizontal, 2)
                     }
+                    technicalsSection
                     VStack(alignment: .leading, spacing: 14) {
-                        Text("STOCK DETAILS").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
+                        Text("COMPANY & TRADING DATA").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
                         dataRow("Previous close", value: stock.previousClose.formatted(.currency(code: stock.currency)))
                         dataRow("Day range", value: dayRange(stock))
                         dataRow("Volume", value: stock.volume?.formatted() ?? "—")
-                        dataRow("Market cap", value: stock.marketCap.map { $0.formatted(.number.notation(.compactName)) } ?? "—")
+                        dataRow("Market cap", value: stock.marketCap.map { $0.formatted(.number.notation(.compactName)) } ?? "Not provided")
                         dataRow("Exchange", value: stock.exchange)
-                        dataRow("Last trade", value: stock.marketTime?.formatted(date: .omitted, time: .shortened) ?? "—")
+                        dataRow("Last market timestamp", value: stock.marketTime?.formatted(date: .abbreviated, time: .shortened) ?? "Unavailable")
                     }.padding(16).background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "info.circle").foregroundStyle(.secondary)
-                        Text("Market data from Yahoo Finance. Quotes may be delayed; this unofficial endpoint has no uptime or real-time guarantee.")
+                        Text("Informational only, not investment advice. Yahoo Finance's unofficial endpoint may return delayed data; indicators are calculated from daily closing prices and can lag intraday moves.")
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 }.padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 32)
@@ -64,7 +69,36 @@ struct StockDetailView: View {
         }
         .background(Color(uiColor: .systemBackground))
         .navigationTitle(symbol).navigationBarTitleDisplayMode(.inline)
-        .task(id: symbol) { await market.refresh(symbol: symbol, range: range) }
+        .task(id: symbol) {
+            async let quoteLoad: Void = market.refresh(symbol: symbol, range: range)
+            do {
+                let history = try await YahooFinanceClient.fetchQuote(symbol: symbol, range: .year)
+                indicatorPoints = history.points
+            } catch {
+                indicatorPoints = []
+            }
+            isLoadingIndicators = false
+            await quoteLoad
+        }
+    }
+
+    private var technicalsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("TECHNICAL INDICATORS").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
+                Spacer()
+                if isLoadingIndicators { ProgressView().controlSize(.small) }
+            }
+            Text("Calculated from daily closes · 1 year of history").font(.caption2).foregroundStyle(.tertiary)
+            dataRow("RSI (14)", value: indicators.rsi14.map { "\($0.formatted(.number.precision(.fractionLength(1)))) · \(rsiLabel($0))" } ?? "Insufficient history")
+            dataRow("SMA (20)", value: priceValue(indicators.sma20, currency: stock?.currency ?? "USD"))
+            dataRow("SMA (50)", value: priceValue(indicators.sma50, currency: stock?.currency ?? "USD"))
+            dataRow("SMA (200)", value: priceValue(indicators.sma200, currency: stock?.currency ?? "USD"))
+            dataRow("MACD (12, 26)", value: priceValue(indicators.macd, currency: stock?.currency ?? "USD"))
+            dataRow("MACD signal (9)", value: priceValue(indicators.macdSignal, currency: stock?.currency ?? "USD"))
+            Text("RSI above 70 or below 30 is often considered an overbought/oversold signal, not a prediction. Simple moving averages use the latest N daily closes.")
+                .font(.caption2).foregroundStyle(.secondary)
+        }.padding(16).background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     @ViewBuilder private func priceChart(_ stock: StockQuote) -> some View {
@@ -104,6 +138,17 @@ struct StockDetailView: View {
             ContentUnavailableView("Chart unavailable", systemImage: "chart.xyaxis.line", description: Text("No history is available for this range."))
         }
     }
+
+    private func quoteTimestamp(_ stock: StockQuote) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: stock.marketTime == nil ? "questionmark.circle" : "clock")
+            if let marketTime = stock.marketTime {
+                Text("Market timestamp: \(marketTime.formatted(date: .omitted, time: .shortened))")
+            } else {
+                Text("Market timestamp unavailable")
+            }
+        }.font(.caption2).foregroundStyle(.secondary)
+    }
     private func chartDomain(_ points: [ChartPoint]) -> ClosedRange<Double> {
         let values = points.map(\.value), low = values.min() ?? 0, high = values.max() ?? 1
         let padding = max((high - low) * 0.12, high * 0.002)
@@ -112,6 +157,14 @@ struct StockDetailView: View {
     private func dayRange(_ stock: StockQuote) -> String {
         guard let low = stock.dayLow, let high = stock.dayHigh else { return "—" }
         return "\(low.formatted(.currency(code: stock.currency))) – \(high.formatted(.currency(code: stock.currency)))"
+    }
+    private func priceValue(_ value: Double?, currency: String) -> String {
+        value?.formatted(.currency(code: currency).precision(.fractionLength(2))) ?? "Insufficient history"
+    }
+    private func rsiLabel(_ value: Double) -> String {
+        if value >= 70 { return "high" }
+        if value <= 30 { return "low" }
+        return "neutral range"
     }
     private func dataRow(_ title: String, value: String) -> some View {
         HStack { Text(title).foregroundStyle(.secondary); Spacer(minLength: 12); Text(value).fontWeight(.medium).multilineTextAlignment(.trailing) }.font(.subheadline)
