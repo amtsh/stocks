@@ -53,7 +53,7 @@ struct StockDetailView: View {
                     }.padding(16).background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "info.circle").foregroundStyle(.secondary)
-                        Text("Market data from Massive. Real-time availability depends on your subscription and exchange entitlements.")
+                        Text("Market data from Yahoo Finance. Quotes may be delayed; this unofficial endpoint has no uptime or real-time guarantee.")
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 }.padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 32)
