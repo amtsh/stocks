@@ -99,7 +99,7 @@ struct ContentView: View {
                                 }
                             }
                         if !searchText.isEmpty {
-                            Button { searchText = ""; market.searchResults = [] } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
+                            Button { searchText = ""; market.clearSearch() } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
                                 .buttonStyle(.plain)
                         }
                     }
