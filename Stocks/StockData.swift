@@ -23,7 +23,11 @@ struct StockQuote: Identifiable, Hashable, Sendable {
     var isPositive: Bool { change >= 0 }
     var formattedPrice: String { price.formatted(.currency(code: currency).precision(.fractionLength(2))) }
     var formattedChange: String {
-        "\(change >= 0 ? "+" : "−")\(abs(change).formatted(.number.precision(.fractionLength(2)))) (\(changePercent >= 0 ? "+" : "−")\(abs(changePercent).formatted(.number.precision(.fractionLength(2)))%)"
+        let changeSign = change >= 0 ? "+" : "−"
+        let percentSign = changePercent >= 0 ? "+" : "−"
+        let formattedChange = abs(change).formatted(.number.precision(.fractionLength(2)))
+        let formattedPercent = abs(changePercent).formatted(.number.precision(.fractionLength(2)))
+        return "\(changeSign)\(formattedChange) (\(percentSign)\(formattedPercent)%)"
     }
 }
 
@@ -141,7 +145,6 @@ final class MarketStore {
     private(set) var isRefreshing = false
     private(set) var lastUpdated: Date?
     var errorMessage: String?
-    var isSettingsPresented = false
 
     var symbols: [String] {
         get { UserDefaults.standard.stringArray(forKey: "watchlist.symbols") ?? [] }
