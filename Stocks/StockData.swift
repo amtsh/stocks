@@ -144,7 +144,7 @@ final class MarketStore {
     var isSettingsPresented = false
 
     var symbols: [String] {
-        get { UserDefaults.standard.stringArray(forKey: "watchlist.symbols") ?? ["AAPL", "NVDA", "MSFT", "GOOGL", "AMZN", "META", "TSLA"] }
+        get { UserDefaults.standard.stringArray(forKey: "watchlist.symbols") ?? [] }
         set { UserDefaults.standard.set(newValue, forKey: "watchlist.symbols") }
     }
 
