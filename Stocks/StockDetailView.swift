@@ -16,7 +16,7 @@ struct StockDetailView: View {
     var body: some View {
         ScrollView {
             if let stock {
-                VStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 5) {
                         Text(stock.name).font(.subheadline).foregroundStyle(.secondary)
                         Text(selectedPoint?.value.formatted(.currency(code: stock.currency).precision(.fractionLength(2))) ?? stock.formattedPrice)
@@ -27,10 +27,9 @@ struct StockDetailView: View {
                             Text("Today").font(.subheadline).foregroundStyle(.secondary)
                         }.foregroundStyle(chartColor)
                         Text("\(stock.exchange) · \(stock.currency)").font(.caption).foregroundStyle(.tertiary)
-                        quoteTimestamp(stock)
                     }
                     externalAppLinks(stock)
-                    priceChart(stock).frame(height: 230)
+                    priceChart(stock).frame(height: 220)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 6) {
                             ForEach(ChartRange.allCases) { item in
@@ -48,44 +47,23 @@ struct StockDetailView: View {
                             }
                         }.padding(.horizontal, 2)
                     }
+                    InvestmentThesisView(
+                        symbol: stock.symbol,
+                        currentPrice: stock.price,
+                        currency: stock.currency
+                    )
                     technicalsSection
-                    NavigationLink {
-                        InvestmentThesisView(
-                            symbol: stock.symbol,
-                            companyName: stock.name,
-                            currentPrice: stock.price,
-                            currency: stock.currency,
-                            quoteTimestamp: stock.marketTime
-                        )
-                    } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "scope")
-                                .font(.title2)
-                                .foregroundStyle(Color.accentColor)
-                                .frame(width: 44, height: 44)
-                                .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Investment thesis").font(.headline).foregroundStyle(.primary)
-                                Text("What growth is priced in? Explore editable bear, base and bull cases.")
-                                    .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.leading)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
-                        }
-                        .padding(16)
-                        .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+                    DisclosureGroup("Key statistics") {
+                        VStack(spacing: 12) {
+                            dataRow("Previous close", value: stock.previousClose.formatted(.currency(code: stock.currency)))
+                            dataRow("Day range", value: dayRange(stock))
+                            dataRow("52-week range", value: weekRange(stock))
+                            dataRow("Volume", value: stock.volume?.formatted() ?? "—")
+                            dataRow("Exchange", value: stock.exchange)
+                            dataRow("Market timestamp", value: stock.marketTime?.formatted(date: .abbreviated, time: .shortened) ?? "Unavailable")
+                        }.padding(.top, 12)
                     }
-                    .buttonStyle(.plain)
-                    VStack(alignment: .leading, spacing: 14) {
-                        Text("COMPANY & TRADING DATA").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
-                        dataRow("Previous close", value: stock.previousClose.formatted(.currency(code: stock.currency)))
-                        dataRow("Day range", value: dayRange(stock))
-                        dataRow("52-week range", value: weekRange(stock))
-                        dataRow("Volume", value: stock.volume?.formatted() ?? "—")
-                        dataRow("Market cap", value: stock.marketCap.map { $0.formatted(.number.notation(.compactName)) } ?? "Not provided")
-                        dataRow("Exchange", value: stock.exchange)
-                        dataRow("Last market timestamp", value: stock.marketTime?.formatted(date: .abbreviated, time: .shortened) ?? "Unavailable")
-                    }.padding(16).background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .font(.headline)
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "info.circle").foregroundStyle(.secondary)
                         Text("Informational only, not investment advice. Yahoo Finance's unofficial endpoint may return delayed data; indicators are calculated from daily closing prices and can lag intraday moves.")
@@ -154,22 +132,26 @@ struct StockDetailView: View {
     }
 
     private var technicalsSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        DisclosureGroup {
+            VStack(spacing: 12) {
+                Text("Calculated from daily closes · 1 year of history")
+                    .font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+                if isLoadingIndicators { ProgressView().controlSize(.small).frame(maxWidth: .infinity, alignment: .leading) }
+                dataRow("RSI (14)", value: indicators.rsi14.map { "\($0.formatted(.number.precision(.fractionLength(1)))) · \(rsiLabel($0))" } ?? "Insufficient history")
+                dataRow("SMA (20)", value: priceValue(indicators.sma20, currency: stock?.currency ?? "USD"))
+                dataRow("SMA (50)", value: priceValue(indicators.sma50, currency: stock?.currency ?? "USD"))
+                dataRow("SMA (200)", value: priceValue(indicators.sma200, currency: stock?.currency ?? "USD"))
+                dataRow("MACD (12, 26)", value: priceValue(indicators.macd, currency: stock?.currency ?? "USD"))
+                dataRow("MACD signal (9)", value: priceValue(indicators.macdSignal, currency: stock?.currency ?? "USD"))
+            }.padding(.top, 12)
+        } label: {
             HStack {
-                Text("TECHNICAL INDICATORS").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
+                Text("Technical indicators").font(.headline)
                 Spacer()
                 if isLoadingIndicators { ProgressView().controlSize(.small) }
             }
-            Text("Calculated from daily closes · 1 year of history").font(.caption2).foregroundStyle(.tertiary)
-            dataRow("RSI (14)", value: indicators.rsi14.map { "\($0.formatted(.number.precision(.fractionLength(1)))) · \(rsiLabel($0))" } ?? "Insufficient history")
-            dataRow("SMA (20)", value: priceValue(indicators.sma20, currency: stock?.currency ?? "USD"))
-            dataRow("SMA (50)", value: priceValue(indicators.sma50, currency: stock?.currency ?? "USD"))
-            dataRow("SMA (200)", value: priceValue(indicators.sma200, currency: stock?.currency ?? "USD"))
-            dataRow("MACD (12, 26)", value: priceValue(indicators.macd, currency: stock?.currency ?? "USD"))
-            dataRow("MACD signal (9)", value: priceValue(indicators.macdSignal, currency: stock?.currency ?? "USD"))
-            Text("RSI above 70 or below 30 is often considered an overbought/oversold signal, not a prediction. Simple moving averages use the latest N daily closes.")
-                .font(.caption2).foregroundStyle(.secondary)
-        }.padding(16).background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .tint(.primary)
     }
 
     @ViewBuilder private func priceChart(_ stock: StockQuote) -> some View {
@@ -210,16 +192,6 @@ struct StockDetailView: View {
         }
     }
 
-    private func quoteTimestamp(_ stock: StockQuote) -> some View {
-        HStack(spacing: 5) {
-            Image(systemName: stock.marketTime == nil ? "questionmark.circle" : "clock")
-            if let marketTime = stock.marketTime {
-                Text("Market timestamp: \(marketTime.formatted(date: .omitted, time: .shortened))")
-            } else {
-                Text("Market timestamp unavailable")
-            }
-        }.font(.caption2).foregroundStyle(.secondary)
-    }
     private func chartDomain(_ points: [ChartPoint]) -> ClosedRange<Double> {
         let values = points.map(\.value), low = values.min() ?? 0, high = values.max() ?? 1
         let padding = max((high - low) * 0.12, high * 0.002)

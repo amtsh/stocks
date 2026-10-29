@@ -52,20 +52,16 @@ private struct ReturnScenario: Identifiable {
 
 struct InvestmentThesisView: View {
     let symbol: String
-    let companyName: String
     let currentPrice: Double
     let currency: String
-    let quoteTimestamp: Date?
 
     @State private var assumptions: InvestmentAssumptions
-    @State private var showAssumptions = true
+    @State private var showAssumptions = false
 
-    init(symbol: String, companyName: String, currentPrice: Double, currency: String, quoteTimestamp: Date?) {
+    init(symbol: String, currentPrice: Double, currency: String) {
         self.symbol = symbol
-        self.companyName = companyName
         self.currentPrice = currentPrice
         self.currency = currency
-        self.quoteTimestamp = quoteTimestamp
         _assumptions = State(initialValue: InvestmentAssumptions.load(for: symbol))
     }
 
@@ -104,36 +100,29 @@ struct InvestmentThesisView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                header
-                impliedExpectationsCard
-                scenariosCard
-                assumptionsCard
-                thesisNotesCard
-                sourcesCard
-                Text("Research aid, not a forecast or investment recommendation. Model output is only as good as the inputs; it excludes dilution, debt changes, dividends, buybacks, taxes and uncertainty in valuation multiples. Never treat the scenario returns as probabilities.")
-                    .font(.caption2).foregroundStyle(.secondary)
-            }
-            .padding(20)
-        }
-        .background(Color(uiColor: .systemBackground))
-        .navigationTitle("Investment thesis")
-        .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: assumptions) { _, newValue in newValue.save(for: symbol) }
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(companyName).font(.subheadline).foregroundStyle(.secondary)
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(symbol).font(.title2.bold())
-                Spacer()
-                Text(currentPrice.formatted(.currency(code: currency))).font(.title2.bold().monospacedDigit())
-            }
-            Text("Price reference: " + (quoteTimestamp?.formatted(date: .abbreviated, time: .shortened) ?? "timestamp unavailable"))
+        VStack(alignment: .leading, spacing: 14) {
+            Text("INVESTMENT THESIS")
+                .font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
+            Text("Scenario estimates use editable placeholder assumptions—not verified company fundamentals.")
                 .font(.caption).foregroundStyle(.secondary)
+            impliedExpectationsCard
+            scenariosCard
+            DisclosureGroup("Thesis notes") {
+                thesisNotesCard
+                    .padding(.top, 10)
+            }
+            .font(.headline).tint(.primary)
+            DisclosureGroup("Model assumptions & sources") {
+                VStack(spacing: 12) {
+                    assumptionsCard
+                    sourcesCard
+                    Text("Research aid, not a forecast or recommendation. Starter assumptions are placeholders, not company data. Scenario returns are not probabilities.")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }.padding(.top, 10)
+            }
+            .font(.headline).tint(.primary)
         }
+        .onChange(of: assumptions) { _, newValue in newValue.save(for: symbol) }
     }
 
     private var impliedExpectationsCard: some View {
