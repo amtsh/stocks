@@ -26,8 +26,8 @@ struct ContentView: View {
                                 if market.isRefreshing { ProgressView().controlSize(.small) }
                             }
                             HStack(spacing: 6) {
-                                Circle().fill(market.apiKeyConfigured ? Color.green : Color.orange).frame(width: 7, height: 7)
-                                Text(market.apiKeyConfigured ? "US market · Real-time plan required" : "Set up market data")
+                                Circle().fill(Color.green).frame(width: 7, height: 7)
+                                Text("Yahoo Finance · Quotes may be delayed")
                                     .font(.subheadline).foregroundStyle(.secondary)
                                 Spacer()
                                 Text("USD").font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
@@ -69,8 +69,8 @@ struct ContentView: View {
                     }
                     Section {
                         VStack(alignment: .leading, spacing: 5) {
-                            Text("Quotes by Massive · US equities").font(.caption2)
-                            Text("Prices update while the app is open. Real-time access depends on your data subscription and exchange entitlements.")
+                            Text("Quotes by Yahoo Finance · US equities").font(.caption2)
+                            Text("Unofficial Yahoo Finance data. Prices may be delayed, and endpoints can change or be rate-limited.")
                                 .font(.caption2)
                             if let updated = market.lastUpdated {
                                 Text("Last refreshed \(updated.formatted(date: .omitted, time: .shortened))").font(.caption2)
@@ -122,7 +122,7 @@ struct ContentView: View {
                         withAnimation(.snappy(duration: 0.22)) {
                             isSearchPresented.toggle()
                             searchText = ""
-                            market.searchResults = []
+                            market.clearSearch()
                         }
                     } label: {
                         Image(systemName: isSearchPresented ? "xmark" : "magnifyingglass")
@@ -151,11 +151,11 @@ struct ContentView: View {
         Section {
             if market.isSearching {
                 HStack { Spacer(); ProgressView(); Spacer() }.listRowSeparator(.hidden)
-            } else if !market.apiKeyConfigured {
-                ContentUnavailableView("Connect market data", systemImage: "key.horizontal", description: Text("Add a Massive API key in Settings to search US stocks."))
+            } else if false {
+                ContentUnavailableView("Connect market data", systemImage: "key.horizontal", description: Text("Yahoo Finance data is currently unavailable."))
                     .listRowSeparator(.hidden)
             } else if searchText.isEmpty {
-                ContentUnavailableView("Find a stock", systemImage: "magnifyingglass", description: Text("Search US-listed companies by name or ticker."))
+                ContentUnavailableView("Find a stock", systemImage: "magnifyingglass", description: Text("Search US-listed companies by name or ticker using Yahoo Finance."))
                     .listRowSeparator(.hidden)
             } else if searchMatches.isEmpty {
                 ContentUnavailableView.search(text: searchText).listRowSeparator(.hidden)
