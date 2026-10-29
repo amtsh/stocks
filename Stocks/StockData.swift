@@ -31,6 +31,56 @@ struct ChartPoint: Identifiable, Hashable, Sendable {
     var id: Date { date }
 }
 
+/// Indicators are calculated locally from daily closes; they are not provider-supplied signals.
+struct TechnicalIndicators: Sendable {
+    let sma20: Double?
+    let sma50: Double?
+    let sma200: Double?
+    let rsi14: Double?
+    let macd: Double?
+    let macdSignal: Double?
+    let observationCount: Int
+
+    init(points: [ChartPoint]) {
+        let closes = points.sorted { $0.date < $1.date }.map(\.value).filter { $0.isFinite && $0 > 0 }
+        observationCount = closes.count
+        sma20 = Self.average(closes, period: 20)
+        sma50 = Self.average(closes, period: 50)
+        sma200 = Self.average(closes, period: 200)
+        rsi14 = Self.rsi(closes, period: 14)
+        let fast = Self.emaSeries(closes, period: 12)
+        let slow = Self.emaSeries(closes, period: 26)
+        let macdSeries = zip(fast, slow).map(-)
+        macd = macdSeries.last
+        macdSignal = Self.emaSeries(macdSeries, period: 9).last
+    }
+
+    private static func average(_ values: [Double], period: Int) -> Double? {
+        guard values.count >= period else { return nil }
+        return values.suffix(period).reduce(0, +) / Double(period)
+    }
+
+    private static func emaSeries(_ values: [Double], period: Int) -> [Double] {
+        guard values.count >= period else { return [] }
+        let multiplier = 2.0 / (Double(period) + 1)
+        var result = [values.prefix(period).reduce(0, +) / Double(period)]
+        for value in values.dropFirst(period) {
+            result.append(value * multiplier + result[result.count - 1] * (1 - multiplier))
+        }
+        return result
+    }
+
+    private static func rsi(_ values: [Double], period: Int) -> Double? {
+        guard values.count > period else { return nil }
+        let changes = zip(values.dropFirst(), values).map(-)
+        let window = changes.suffix(period)
+        let gains = window.filter { $0 > 0 }.reduce(0, +) / Double(period)
+        let losses = window.filter { $0 < 0 }.reduce(0) { $0 + abs($1) } / Double(period)
+        if losses == 0 { return gains == 0 ? 50 : 100 }
+        return 100 - (100 / (1 + gains / losses))
+    }
+}
+
 struct StockSearchResult: Identifiable, Hashable, Sendable {
     let symbol: String
     let name: String
@@ -203,7 +253,7 @@ enum YahooFinanceClient {
         let price = (meta["regularMarketPrice"] as? NSNumber)?.doubleValue
             ?? (meta["chartPreviousClose"] as? NSNumber)?.doubleValue
             ?? 0
-        guard price > 0 else { throw MarketDataError.noData }
+        guard price.isFinite, price > 0 else { throw MarketDataError.noData }
         let previousClose = (meta["previousClose"] as? NSNumber)?.doubleValue
             ?? (meta["chartPreviousClose"] as? NSNumber)?.doubleValue
             ?? price
@@ -211,9 +261,9 @@ enum YahooFinanceClient {
         let quoteBlock = ((result["indicators"] as? [String: Any])?["quote"] as? [[String: Any]])?.first ?? [:]
         let closes = quoteBlock["close"] as? [Any] ?? []
         let points = zip(timestamps, closes).compactMap { (timestamp, rawValue) -> ChartPoint? in
-            guard let value = rawValue as? NSNumber, value.doubleValue > 0 else { return nil }
+            guard let value = rawValue as? NSNumber, value.doubleValue.isFinite, value.doubleValue > 0 else { return nil }
             return ChartPoint(date: Date(timeIntervalSince1970: timestamp), value: value.doubleValue)
-        }
+        }.sorted { $0.date < $1.date }
         let currency = (meta["currency"] as? String).flatMap { $0.count == 3 ? $0 : nil } ?? "USD"
         let marketTime = (meta["regularMarketTime"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue) }
         let name = (meta["longName"] as? String) ?? (meta["shortName"] as? String) ?? symbol
