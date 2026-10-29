@@ -40,7 +40,7 @@ No market data is guaranteed real-time. This app is for informational research o
 - Search: `/v1/finance/search`, filtered to equity results.
 - Quotes/history: `/v8/finance/chart/{symbol}`.
 - No API key or account is required.
-- The watchlist currently refreshes every 15 seconds while the app is open. This is polling, not streaming, and should be reduced before broad use.
+- The watchlist currently refreshes every 60 seconds while the app is open. This is polling, not streaming, and should be reduced before broad use.
 - Market capitalization is not shown as a real value because the chart endpoint does not reliably provide it.
 
 ## Requirements and run
