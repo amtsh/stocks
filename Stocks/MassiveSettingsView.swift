@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct MassiveSettingsView: View {
+struct MarketDataSettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
