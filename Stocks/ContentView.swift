@@ -10,6 +10,21 @@ struct ContentView: View {
 
     private var searchMatches: [StockSearchResult] { market.searchResults.filter { !market.symbols.contains($0.symbol) } }
 
+    /// Estimates the regular US equity session in New York time.
+    /// This schedule check does not account for exchange holidays or early closes.
+    private var isUSMarketOpen: Bool {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/New_York") ?? .current
+        let now = Date()
+        let weekday = calendar.component(.weekday, from: now)
+        let minutes = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
+        return (2...6).contains(weekday) && minutes >= 9 * 60 + 30 && minutes < 16 * 60
+    }
+
+    private var headerDate: String {
+        Date.now.formatted(.dateTime.day().month(.wide))
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -48,24 +63,16 @@ struct ContentView: View {
                     }
                 } else {
                     Section {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(alignment: .firstTextBaseline) {
-                                Text(Date.now.formatted(.dateTime.month(.wide).day()))
-                                    .font(.system(size: 30, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                                if market.isRefreshing { ProgressView().controlSize(.small) }
-                            }
-                            HStack(spacing: 6) {
-                                Circle().fill(Color.green).frame(width: 7, height: 7)
-                                Text("Yahoo Finance · Quotes may be delayed")
-                                    .font(.subheadline).foregroundStyle(.secondary)
-                                Spacer()
-                                Text("USD").font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
-                            }
+                        HStack(spacing: 6) {
+                            Text("Yahoo Finance · Quotes may be delayed")
+                                .font(.subheadline).foregroundStyle(.secondary)
+                            Spacer()
+                            Text("USD").font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+                            if market.isRefreshing { ProgressView().controlSize(.small) }
                         }
-                        .padding(.top, 2).padding(.bottom, 6)
-                        .listRowSeparator(.hidden).listRowBackground(Color.clear)
+                        .padding(.vertical, 4)
+                        .listRowSeparator(.hidden, edges: .all)
+                        .listRowBackground(Color.clear)
                     }
                     Section {
                         ForEach(market.symbols, id: \.self) { symbol in
@@ -109,7 +116,8 @@ struct ContentView: View {
                             if let error = market.errorMessage { Text(error).font(.caption2).foregroundStyle(.red) }
                         }
                         .foregroundStyle(.tertiary).padding(.vertical, 12)
-                        .listRowSeparator(.hidden).listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden, edges: .all)
+                        .listRowBackground(Color.clear)
                     }
                 }
             }
@@ -145,9 +153,25 @@ struct ContentView: View {
                 .padding(.horizontal, 16).padding(.bottom, 8)
                 .background(.bar)
             }
-            .navigationTitle(isSearchPresented ? "Search" : "Stocks")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle(isSearchPresented ? "Search" : headerDate)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    if !isSearchPresented {
+                        HStack(spacing: 7) {
+                            Text(headerDate)
+                                .font(.headline)
+                            Circle()
+                                .fill(isUSMarketOpen ? Color.green : Color.red)
+                                .frame(width: 8, height: 8)
+                                .accessibilityLabel(isUSMarketOpen ? "US market open" : "US market closed")
+                            Text(isUSMarketOpen ? "Open" : "Closed")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         withAnimation(.snappy(duration: 0.22)) {
