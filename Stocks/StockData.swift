@@ -14,6 +14,8 @@ struct StockQuote: Identifiable, Hashable, Sendable {
     var dayLow: Double?
     var volume: Int?
     var marketCap: Double?
+    var fiftyTwoWeekHigh: Double?
+    var fiftyTwoWeekLow: Double?
 
     var id: String { symbol }
     var change: Double { price - previousClose }
@@ -271,6 +273,8 @@ enum YahooFinanceClient {
         let dayHigh = (meta["regularMarketDayHigh"] as? NSNumber)?.doubleValue
         let dayLow = (meta["regularMarketDayLow"] as? NSNumber)?.doubleValue
         let volume = (meta["regularMarketVolume"] as? NSNumber)?.intValue
+        let fiftyTwoWeekHigh = (meta["fiftyTwoWeekHigh"] as? NSNumber)?.doubleValue
+        let fiftyTwoWeekLow = (meta["fiftyTwoWeekLow"] as? NSNumber)?.doubleValue
 
         return StockQuote(
             symbol: symbol.uppercased(),
@@ -284,7 +288,9 @@ enum YahooFinanceClient {
             dayHigh: dayHigh,
             dayLow: dayLow,
             volume: volume,
-            marketCap: nil
+            marketCap: nil,
+            fiftyTwoWeekHigh: fiftyTwoWeekHigh,
+            fiftyTwoWeekLow: fiftyTwoWeekLow
         )
     }
 
