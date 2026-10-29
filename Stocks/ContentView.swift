@@ -22,7 +22,7 @@ struct ContentView: View {
     }
 
     private var headerDate: String {
-        Date.now.formatted(.dateTime.day().month(.wide))
+        Date.now.formatted(.dateTime.day().month(.wide).locale(Locale(identifier: "en_GB")) )
     }
 
     var body: some View {
@@ -165,9 +165,6 @@ struct ContentView: View {
                                 .fill(isUSMarketOpen ? Color.green : Color.red)
                                 .frame(width: 8, height: 8)
                                 .accessibilityLabel(isUSMarketOpen ? "US market open" : "US market closed")
-                            Text(isUSMarketOpen ? "Open" : "Closed")
-                                .font(.caption.weight(.medium))
-                                .foregroundStyle(.secondary)
                         }
                         .accessibilityElement(children: .combine)
                     }
