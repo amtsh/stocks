@@ -51,6 +51,7 @@ struct StockDetailView: View {
                         Text("COMPANY & TRADING DATA").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
                         dataRow("Previous close", value: stock.previousClose.formatted(.currency(code: stock.currency)))
                         dataRow("Day range", value: dayRange(stock))
+                        dataRow("52-week range", value: weekRange(stock))
                         dataRow("Volume", value: stock.volume?.formatted() ?? "—")
                         dataRow("Market cap", value: stock.marketCap.map { $0.formatted(.number.notation(.compactName)) } ?? "Not provided")
                         dataRow("Exchange", value: stock.exchange)
@@ -156,6 +157,10 @@ struct StockDetailView: View {
     }
     private func dayRange(_ stock: StockQuote) -> String {
         guard let low = stock.dayLow, let high = stock.dayHigh else { return "—" }
+        return "\(low.formatted(.currency(code: stock.currency))) – \(high.formatted(.currency(code: stock.currency)))"
+    }
+    private func weekRange(_ stock: StockQuote) -> String {
+        guard let low = stock.fiftyTwoWeekLow, let high = stock.fiftyTwoWeekHigh else { return "Unavailable" }
         return "\(low.formatted(.currency(code: stock.currency))) – \(high.formatted(.currency(code: stock.currency)))"
     }
     private func priceValue(_ value: Double?, currency: String) -> String {
