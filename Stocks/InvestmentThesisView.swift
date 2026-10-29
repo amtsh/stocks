@@ -104,22 +104,26 @@ struct InvestmentThesisView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                header
-                impliedExpectationsCard
-                scenariosCard
-                assumptionsCard
+        VStack(alignment: .leading, spacing: 14) {
+            Text("INVESTMENT THESIS")
+                .font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(.secondary)
+            impliedExpectationsCard
+            scenariosCard
+            DisclosureGroup("Thesis notes") {
                 thesisNotesCard
-                sourcesCard
-                Text("Research aid, not a forecast or investment recommendation. Model output is only as good as the inputs; it excludes dilution, debt changes, dividends, buybacks, taxes and uncertainty in valuation multiples. Never treat the scenario returns as probabilities.")
-                    .font(.caption2).foregroundStyle(.secondary)
+                    .padding(.top, 10)
             }
-            .padding(20)
+            .font(.headline).tint(.primary)
+            DisclosureGroup("Model assumptions & sources") {
+                VStack(spacing: 12) {
+                    assumptionsCard
+                    sourcesCard
+                    Text("Research aid, not a forecast or recommendation. Starter assumptions are placeholders, not company data. Scenario returns are not probabilities.")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }.padding(.top, 10)
+            }
+            .font(.headline).tint(.primary)
         }
-        .background(Color(uiColor: .systemBackground))
-        .navigationTitle("Investment thesis")
-        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: assumptions) { _, newValue in newValue.save(for: symbol) }
     }
 
